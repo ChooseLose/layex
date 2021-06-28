@@ -76,7 +76,9 @@ local function setProperties(inst, ...)
 		local callback = checks:getCheck(checks:check(prop)).callback
 		
 		local ck, cv = callback(prop, val, inst, props, returnmap)
-		returnmap[ck] = cv
+		if ck then
+			returnmap[ck] = cv
+		end
 	end
 	
 	return inst, returnmap
