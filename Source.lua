@@ -259,7 +259,7 @@ default_checks:add { -- maps
 		local sub = val.binding:subscribe(function(bindingval, bindingextra)
 			setProperties(inst, {[key] = val.func(bindingval, bindingextra, inst, returnmap)})
 		end)
-		setProperties(inst, {[key] = val.func(val.binding:get())})
+		setProperties(inst, {[key] = val.func(val.binding:get(), inst, returnmap)})
 		return sub
 	end,
 }
