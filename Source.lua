@@ -319,6 +319,7 @@ layex.new = new
 layex.Binding = binding.new
 layex.event = event
 layex.tween = tween
+layex.Component = component
 
 setmetatable(layex, {
 	__index = function(self, k)
