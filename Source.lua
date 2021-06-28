@@ -186,7 +186,7 @@ checks:add {
 		obj.connection = inst[key.eventname]:Connect(function(...)
 			val(obj, ...)
 		end)
-		return val.name, obj.connection
+		return key.name, obj.connection
 	end,
 }
 
