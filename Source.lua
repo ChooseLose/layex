@@ -316,6 +316,7 @@ checks:add {
 -- Export Layex
 local layex = {}
 
+layex.setProperties = setProperties
 layex.new = new
 layex.Binding = binding.new
 layex.event = event
