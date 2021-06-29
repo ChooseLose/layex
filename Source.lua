@@ -313,15 +313,41 @@ checks:add {
 	end,
 }
 
+-- signal
+local signal = {}
+signal.__index = signal
+signal.__tostring = function()return"Signal"end
+local signalconnection = {}
+signalconnection.__index = signalconnection
+signalconnection.__tostring = function()return"Connection"end
+
+function signal.new()
+	return setmetatable({connections = {}}, signal)
+end
+function signal:Connect(func)
+	local con = setmetatable({func = func, event = self}, signalconnection)
+	self.connections[con] = true
+	return con
+end
+function signal:Fire(...)
+	for connection in pairs(self.connections) do
+		connection.func(...)
+	end
+end
+function signalconnection:Disconnect()
+	self.event.connections[self] = nil
+end
+
 -- Export Layex
 local layex = {}
 
 layex.setProperties = setProperties
 layex.new = new
-layex.Binding = binding.new
 layex.event = event
 layex.tween = tween
+layex.Binding = binding.new
 layex.Component = component
+layex.Signal = signal.new
 
 setmetatable(layex, {
 	__index = function(self, k)
