@@ -71,16 +71,16 @@ parent_checks:add {
 local function setProperties(inst, ...)
 	local props = merge(...)
 	local returnmap = {}
-	
+
 	for prop, val in pairs(props) do
 		local callback = checks:getCheck(checks:check(prop)).callback
-		
+
 		local ck, cv = callback(prop, val, inst, props, returnmap)
 		if ck then
 			returnmap[ck] = cv
 		end
 	end
-	
+
 	return inst, returnmap
 end
 
@@ -155,11 +155,11 @@ function component:setState(state, extra)
 		self.state[k] = v
 	end
 	self.extra = extra
-	
+
 	self:update(self.state, self.extra)
 end
 
-	-- add it as a way to be used in the first layex.new(... argument
+-- add it as a way to be used in the first layex.new(... argument
 component_checks:add {
 	name = "statefulcomponent",
 	check = function(val)
@@ -214,7 +214,7 @@ end
 function binding:set(value, extra)
 	self.value = value
 	self.extra = extra
-	
+
 	for sub in pairs(self.connections) do
 		sub.func(value, extra)
 	end
@@ -227,7 +227,7 @@ end
 function binding:subscribe(func)
 	local sub = bindingsub.new(self, func)
 	self.connections[sub] = true
-	
+
 	return sub
 end
 
@@ -236,7 +236,18 @@ function binding:map(f)
 	return setmetatable({func = f, binding = self}, binding_map_identifier)
 end
 
-	-- make bindings work as a prop
+local multiple_maps_identifier = {}
+local function mapBinds(...)
+	local args = {...}
+	local func = args[#args]
+	table.remove(args, #args)
+	
+	-- args: bindings to map
+	-- func: func to map to bindings
+	return setmetatable({func = func, binds = args}, multiple_maps_identifier)
+end
+
+-- make bindings work as a prop
 default_checks:add {
 	name = "binding",
 	check = function(val)
@@ -264,6 +275,23 @@ default_checks:add { -- maps
 		return sub
 	end,
 }
+default_checks:add { -- multiplemaps
+	name = "multiplemaps",
+	check = function(val)
+		return type(val) == "table" and getmetatable(val) == multiple_maps_identifier
+	end,
+	callback = function(key, val, inst, returnmap)
+		local subs = {}
+		for _, bind in ipairs(val.binds) do
+			table.insert(subs, bind:subscribe(function(bindingval, bindingextra)
+				setProperties(inst, {[key] = val.func(unpack(val.binds))})
+			end))
+		end
+		setProperties(inst, {[key] = val.func(unpack(val.binds))})
+		
+		return subs
+	end,
+}
 
 -- tweens
 local ts = game:GetService("TweenService")
@@ -272,7 +300,7 @@ local function tween(props, tweeninfo, initval)
 	return setmetatable({props = props, tweeninfo = tweeninfo, init = initval}, tween_identifier)
 end
 
-	-- make tween work as prop
+-- make tween work as prop
 default_checks:add {
 	name = "tween",
 	check = function(val)
@@ -306,7 +334,7 @@ checks:add {
 			local descendants = child[2]
 			child[1], child[2] = nil
 			child[key] = descendants -- 'key' is a layex.childs
-			
+
 			created_childs[childname] = new(childtype, inst, child)
 		end
 		return "childs", created_childs
@@ -346,6 +374,7 @@ layex.new = new
 layex.event = event
 layex.tween = tween
 layex.Binding = binding.new
+layex.MapBindings = mapBinds
 layex.Component = component
 layex.Signal = signal.new
 
